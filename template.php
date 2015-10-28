@@ -6,10 +6,10 @@ class Template {
 
 	private function parse_args($args) {
 		$attrs = array();
-		preg_match_all('/[^\s=]*=[^\s]*/', $args, $matches);
+		preg_match_all('/[^\s=]*=".*?"/', $args, $matches);
 		foreach($matches[0] as $match) {
-			list($attr, $val) = explode('=', $match);
-			$attrs[$attr] = $val;
+			list($attr, $val) = explode('=', $match, 2);
+			$attrs[$attr] = trim($val, '"');
 		}
 		return $attrs;
 	}
@@ -29,32 +29,42 @@ class Template {
 	}
 
 	private function trans_if ($matches) {
-
+		$attrs = $this->parse_args($matches[1]);
+		$result = '<?php if('.$attrs['condition'].'):?>';
+		$result .= $matches[2];
+		$result .= '<?php endif;?>';
+		return $result;
 	}
 
-	private function trans_elseif () {
-
+	private function trans_elseif ($matches) {
+		$attrs = $this->parse_args($matches[1]);
+		$result = '<?php elseif('.$attrs['condition'].'):?>';
+		return $result;
 	}
 
 	private function trans_else () {
-
+		$result = '<?php else:?>';
+		return $result;
 	}
 
 	private function parse_volist($content) {
-		$pattern = '/'.$this->tag_begin.'volist\s*(.*)'.$this->tag_end.'(.*)'.$this->tag_begin.'\/volist'.$this->tag_end.'/s';
+		$pattern = '/'.$this->tag_begin.'volist\s*(.*?)'.$this->tag_end.'(.*)'.$this->tag_begin.'\/volist'.$this->tag_end.'/s';
 		return preg_replace_callback($pattern, array($this, 'trans_volist'), $content);
 	}
 
 	private function parse_if($content) {
-		return $content;
+		$pattern = '/'.$this->tag_begin.'if\s*(.*?)'.$this->tag_end.'(.*)'.$this->tag_begin.'\/if'.$this->tag_end.'/s';
+		return preg_replace_callback($pattern, array($this, 'trans_if'), $content);
 	}
 
 	private function parse_elseif($content) {
-		return $content;
+		$pattern = '/'.$this->tag_begin.'elseif\s*(.*?)\/'.$this->tag_end.'/s';
+		return preg_replace_callback($pattern, array($this, 'trans_elseif'), $content);
 	}
 
 	private function parse_else($content) {
-		return $content;
+		$pattern = '/'.$this->tag_begin.'else\/'.$this->tag_end.'/s';
+		return preg_replace_callback($pattern, array($this, 'trans_else'), $content);
 	}
 
 	public function parse($content) {

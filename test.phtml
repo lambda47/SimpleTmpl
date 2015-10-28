@@ -4,8 +4,14 @@
 </head>
 <body>
 <ul>
-<!--{volist name=fruits id=it }-->
-	<li></li>
+<!--{volist name="fruits" id="it" }-->
+	<!--{if condition="$fruits[$it].type == 0"}-->
+		<li>Fruit(0)</li>
+    <!--{elseif condition="$fruits[$it].type == 1"/}-->
+    	<li>Fruit(1)</li>
+    <!--{else/}-->
+    	<li>Fruit(Other)</li>
+    <!--{/if}-->
 <!--{/volist}-->
 <ul>
 </body>
