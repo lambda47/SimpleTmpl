@@ -5,11 +5,11 @@
 <body>
 <ul>
 <!--{volist name="fruits" id="it" offset="3"}-->
-	<!--{if condition="$it.type == 0"}-->
+	<!--{if condition="$it.type.no == 0"}-->
 		<!--{if condition="$it.num > 0"}-->
 			<li>{{$it.name}}</li>
 		<!--{/if}-->
-    <!--{elseif condition="$it.type == 1"/}-->
+    <!--{elseif condition="$it.type.no == 1"/}-->
     	<li>{{$it.name}}</li>
     <!--{else/}-->
     	<li>{{$it.name}}</li>

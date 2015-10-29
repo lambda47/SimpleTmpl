@@ -14,6 +14,13 @@ class Template {
 		return $attrs;
 	}
 
+	private function parse_cond_var($matches) {
+		$keys_arr = explode('.', substr($matches[2], 1));
+		return $matches[1].array_reduce($keys_arr, function($str, $item){
+			return $str.'[\''.$item.'\']';
+		}, '');
+	}
+
 	private function trans_volist($matches) {
 		$attrs = $this->parse_args($matches[1]);
 		if(!isset($attrs['id'])) {
@@ -52,7 +59,8 @@ class Template {
 
 	private function trans_if ($matches) {
 		$attrs = $this->parse_args($matches[1]);
-		$result = '<?php if('.$attrs['condition'].'):?>';
+		$condition = preg_replace_callback('/(\$[^\.]+)((?:\.\w+)+)/', array($this, 'parse_cond_var'), $attrs['condition']);
+		$result = '<?php if('.$condition.'):?>';
 		$result .= $matches[2];
 		$result .= '<?php endif;?>';
 		return $result;
@@ -60,7 +68,8 @@ class Template {
 
 	private function trans_elseif ($matches) {
 		$attrs = $this->parse_args($matches[1]);
-		$result = '<?php elseif('.$attrs['condition'].'):?>';
+		$condition = preg_replace_callback('/(\$[^\.]+)((?:\.\w+)+)/', array($this, 'parse_cond_var'), $attrs['condition']);
+		$result = '<?php elseif('.$condition.'):?>';
 		return $result;
 	}
 
