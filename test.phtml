@@ -5,14 +5,14 @@
 <body>
 <ul>
 <!--{volist name="fruits" id="it" }-->
-	<!--{if condition="$fruits[$it].type == 0"}-->
-		<!--{if condition="$fruits[$it].num > 0"}-->
-			<li>{{$fruits[$it]['name']}}</li>
+	<!--{if condition="$it.type == 0"}-->
+		<!--{if condition="$it.num > 0"}-->
+			<li>{{$it.name}}</li>
 		<!--{/if}-->
-    <!--{elseif condition="$fruits[$it].type == 1"/}-->
-    	<li>{{$fruits[$it]['name']}}</li>
+    <!--{elseif condition="$it.type == 1"/}-->
+    	<li>{{$it.name}}</li>
     <!--{else/}-->
-    	<li>{{$fruits[$it]['name']}}</li>
+    	<li>{{$it.name}}</li>
     <!--{/if}-->
 <!--{/volist}-->
 <ul>

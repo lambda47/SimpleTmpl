@@ -17,12 +17,9 @@ class Template {
 	private function trans_volist($matches) {
 		$attrs = $this->parse_args($matches[1]);
 		if(!isset($attrs['id'])) {
-			$attrs['id'] = 'index';
+			$attrs['id'] = 'item';
 		}
-		if(!isset($attrs['val'])) {
-			$attrs['val'] = 'item';
-		}
-		$result =  '<?php foreach($'.$attrs['name'].' as $'.$attrs['id'].' => $'.$attrs['val'].'):?>';
+		$result =  '<?php foreach($'.$attrs['name'].' as $key => $'.$attrs['id'].'):?>';
 		$result .= $matches[2];
 		$result .= '<?php endforeach;?>';
 		return $result;
@@ -48,7 +45,8 @@ class Template {
 	}
 
 	private function trans_var($matches) {
-		$result = '<?php echo '.$matches[1].';?>';
+		$var = preg_replace('/\.([^\.]+)/', "['$1']", $matches[1]);
+		$result = '<?php echo '.$var.';?>';
 		return $result;
 	}
 
