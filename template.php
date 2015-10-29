@@ -19,7 +19,18 @@ class Template {
 		if(!isset($attrs['id'])) {
 			$attrs['id'] = 'item';
 		}
-		$result =  '<?php foreach($'.$attrs['name'].' as $key => $'.$attrs['id'].'):?>';
+		if(isset($attrs['offset']) || isset($attrs['length'])) {
+			$offset = isset($attrs['offset']) ? max(intval($attrs['offset']), 1) : 0;
+			$length = isset($attrs['length']) ? intval($attrs['length']) : 0;
+			if($length === 0) {
+				$arr_exp = 'array_slice($'.$attrs['name'].', '.$offset.', count($'.$attrs['name'].'), true)';
+			} else {
+				$arr_exp = 'array_slice($'.$attrs['name'].', '.$offset.', '.$length.', true)';
+			}
+		} else {
+			$arr_exp = '$'.$attrs['name'];
+		}
+		$result =  '<?php foreach('.$arr_exp.' as $key => $'.$attrs['id'].'):?>';
 		$result .= $matches[2];
 		$result .= '<?php endforeach;?>';
 		return $result;
