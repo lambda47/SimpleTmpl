@@ -25,6 +25,20 @@ class Template {
 		return $result;
 	}
 
+	private function trans_foreach($matches) {
+		$attrs = $this->parse_args($matches[1]);
+		if(!isset($attrs['key'])) {
+			$attrs['key'] = 'key';
+		}
+		if(!isset($attrs['item'])) {
+			$attrs['item'] = 'item';
+		}
+		$result = '<?php foreach($'.$attrs['name'].' as $'.$attrs['key'].' => $'.$attrs['item'].'):?>';
+		$result .= $matches[2];
+		$result .= '<?php endforeach;?>';
+		return $result;
+	}
+
 	private function trans_if ($matches) {
 		$attrs = $this->parse_args($matches[1]);
 		$result = '<?php if('.$attrs['condition'].'):?>';
@@ -51,17 +65,22 @@ class Template {
 	}
 
 	private function parse_volist($content) {
-		$pattern = '/'.$this->tag_begin.'volist\s*(.*?)'.$this->tag_end.'(.*)'.$this->tag_begin.'\/volist'.$this->tag_end.'/s';
+		$pattern = '/'.$this->tag_begin.'volist\s+(.*?)'.$this->tag_end.'(.*)'.$this->tag_begin.'\/volist'.$this->tag_end.'/s';
 		return preg_replace_callback($pattern, array($this, 'trans_volist'), $content);
 	}
 
+	private function parse_foreach($content) {
+		$pattern = '/'.$this->tag_begin.'foreach\s+(.*?)'.$this->tag_end.'(.*)'.$this->tag_begin.'\/foreach'.$this->tag_end.'/s';
+		return preg_replace_callback($pattern, array($this, 'trans_foreach'), $content);
+	}
+
 	private function parse_if($content) {
-		$pattern = '/'.$this->tag_begin.'if\s*(.*?)'.$this->tag_end.'(.*)'.$this->tag_begin.'\/if'.$this->tag_end.'/s';
+		$pattern = '/'.$this->tag_begin.'if\s+(.*?)'.$this->tag_end.'(.*)'.$this->tag_begin.'\/if'.$this->tag_end.'/s';
 		return preg_replace_callback($pattern, array($this, 'trans_if'), $content);
 	}
 
 	private function parse_elseif($content) {
-		$pattern = '/'.$this->tag_begin.'elseif\s*(.*?)\/'.$this->tag_end.'/s';
+		$pattern = '/'.$this->tag_begin.'elseif\s+(.*?)\/'.$this->tag_end.'/s';
 		return preg_replace_callback($pattern, array($this, 'trans_elseif'), $content);
 	}
 
@@ -78,6 +97,7 @@ class Template {
 	public function parse($content) {
 		for($i = 0; $i < $this->level; $i++) {
 			$content = $this->parse_volist($content);
+			$content = $this->parse_foreach($content);
 			$content = $this->parse_if($content);
 		}
 		$content = $this->parse_elseif($content);

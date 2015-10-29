@@ -4,7 +4,7 @@
 </head>
 <body>
 <ul>
-<!--{volist name="fruits" id="it" }-->
+<!--{volist name="fruits" id="it"}-->
 	<!--{if condition="$it.type == 0"}-->
 		<!--{if condition="$it.num > 0"}-->
 			<li>{{$it.name}}</li>
@@ -16,5 +16,10 @@
     <!--{/if}-->
 <!--{/volist}-->
 <ul>
+<ul>
+<!--{foreach name="fruits" key="k", item="vo"}-->
+	<li>{{$k}}|{{$vo}}</li>
+<!--{/foreach}-->
+</ul>
 </body>
 </html>
