@@ -57,6 +57,18 @@ class Template {
 		return $result;
 	}
 
+	private function trans_for($matches) {
+		$attrs = $this->parse_args($matches[1]);
+		if(!isset($attrs['name'])) {
+			$attrs['name'] = 'i';
+		}
+		$step = isset($attrs['step']) ? max(intval($attrs['step']), 1) : 1;
+		$result = '<?php for($'.$attrs['name'].' = '.$attrs['start'].'; $'.$attrs['name'].' < '.$attrs['end'].'; $'.$attrs['name'].' += '.$step.'):?>';
+		$result .= $matches[2];
+		$result .= '<?php endfor;?>';
+		return $result;
+	}
+
 	private function trans_if ($matches) {
 		$attrs = $this->parse_args($matches[1]);
 		$condition = preg_replace_callback('/(\$[^\.]+)((?:\.\w+)+)/', array($this, 'parse_cond_var'), $attrs['condition']);
@@ -94,6 +106,11 @@ class Template {
 		return preg_replace_callback($pattern, array($this, 'trans_foreach'), $content);
 	}
 
+	private function parse_for($content) {
+		$pattern = '/'.$this->tag_begin.'for\s+(.*?)'.$this->tag_end.'(.*)'.$this->tag_begin.'\/for'.$this->tag_end.'/s';
+		return preg_replace_callback($pattern, array($this, 'trans_for'), $content);
+	}
+
 	private function parse_if($content) {
 		$pattern = '/'.$this->tag_begin.'if\s+(.*?)'.$this->tag_end.'(.*)'.$this->tag_begin.'\/if'.$this->tag_end.'/s';
 		return preg_replace_callback($pattern, array($this, 'trans_if'), $content);
@@ -118,6 +135,7 @@ class Template {
 		for($i = 0; $i < $this->level; $i++) {
 			$content = $this->parse_volist($content);
 			$content = $this->parse_foreach($content);
+			$content = $this->parse_for($content);
 			$content = $this->parse_if($content);
 		}
 		$content = $this->parse_elseif($content);
