@@ -47,6 +47,11 @@ class Template {
 		return $result;
 	}
 
+	private function trans_var($matches) {
+		$result = '<?php echo '.$matches[1].';?>';
+		return $result;
+	}
+
 	private function parse_volist($content) {
 		$pattern = '/'.$this->tag_begin.'volist\s*(.*?)'.$this->tag_end.'(.*)'.$this->tag_begin.'\/volist'.$this->tag_end.'/s';
 		return preg_replace_callback($pattern, array($this, 'trans_volist'), $content);
@@ -67,6 +72,11 @@ class Template {
 		return preg_replace_callback($pattern, array($this, 'trans_else'), $content);
 	}
 
+	private function parse_var($content) {
+		$pattern = '/{{(.*?)}}/';
+		return preg_replace_callback($pattern, array($this, 'trans_var'), $content);
+	}
+
 	public function parse($content) {
 		for($i = 0; $i < $this->level; $i++) {
 			$content = $this->parse_volist($content);
@@ -74,6 +84,8 @@ class Template {
 		}
 		$content = $this->parse_elseif($content);
 		$content = $this->parse_else($content);
+		$content = $this->parse_var($content);
+
 		return $content;
 	}
 }

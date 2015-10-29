@@ -6,11 +6,13 @@
 <ul>
 <!--{volist name="fruits" id="it" }-->
 	<!--{if condition="$fruits[$it].type == 0"}-->
-		<li>Fruit(0)</li>
+		<!--{if condition="$fruits[$it].num > 0"}-->
+			<li>{{$fruits[$it]['name']}}</li>
+		<!--{/if}-->
     <!--{elseif condition="$fruits[$it].type == 1"/}-->
-    	<li>Fruit(1)</li>
+    	<li>{{$fruits[$it]['name']}}</li>
     <!--{else/}-->
-    	<li>Fruit(Other)</li>
+    	<li>{{$fruits[$it]['name']}}</li>
     <!--{/if}-->
 <!--{/volist}-->
 <ul>
