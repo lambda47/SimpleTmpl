@@ -30,7 +30,7 @@ class Template {
 			$offset = isset($attrs['offset']) ? max(intval($attrs['offset']), 1) : 0;
 			$length = isset($attrs['length']) ? intval($attrs['length']) : 0;
 			if($length === 0) {
-				$arr_exp = 'array_slice($'.$attrs['name'].', '.$offset.', count($'.$attrs['name'].'), true)';
+				$arr_exp = 'array_slice($'.$attrs['name'].', '.$offset.', NULL, true)';
 			} else {
 				$arr_exp = 'array_slice($'.$attrs['name'].', '.$offset.', '.$length.', true)';
 			}
