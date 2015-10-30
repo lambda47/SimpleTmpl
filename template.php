@@ -97,22 +97,22 @@ class Template {
 	}
 
 	private function parse_volist($content) {
-		$pattern = '/'.$this->tag_begin.'volist\s+(.*?)'.$this->tag_end.'(.*)'.$this->tag_begin.'\/volist'.$this->tag_end.'/s';
+		$pattern = '/(?>'.$this->tag_begin.'volist\s+(.*?)'.$this->tag_end.')((?:.(?!'.$this->tag_begin.'volist.*?'.$this->tag_end.'))*?)'.$this->tag_begin.'\/volist'.$this->tag_end.'/s';
 		return preg_replace_callback($pattern, array($this, 'trans_volist'), $content);
 	}
 
 	private function parse_foreach($content) {
-		$pattern = '/'.$this->tag_begin.'foreach\s+(.*?)'.$this->tag_end.'(.*)'.$this->tag_begin.'\/foreach'.$this->tag_end.'/s';
+		$pattern = '/(?>'.$this->tag_begin.'foreach\s+(.*?)'.$this->tag_end.')((?:.(?!'.$this->tag_begin.'foreach.*?'.$this->tag_end.'))*?)'.$this->tag_begin.'\/foreach'.$this->tag_end.'/s';
 		return preg_replace_callback($pattern, array($this, 'trans_foreach'), $content);
 	}
 
 	private function parse_for($content) {
-		$pattern = '/'.$this->tag_begin.'for\s+(.*?)'.$this->tag_end.'(.*)'.$this->tag_begin.'\/for'.$this->tag_end.'/s';
+		$pattern = '/(?>'.$this->tag_begin.'for\s+(.*?)'.$this->tag_end.')((?:.(?!'.$this->tag_begin.'for.*?'.$this->tag_end.'))*?)'.$this->tag_begin.'\/for'.$this->tag_end.'/s';
 		return preg_replace_callback($pattern, array($this, 'trans_for'), $content);
 	}
 
 	private function parse_if($content) {
-		$pattern = '/'.$this->tag_begin.'if\s+(.*?)'.$this->tag_end.'(.*)'.$this->tag_begin.'\/if'.$this->tag_end.'/s';
+		$pattern = '/(?>'.$this->tag_begin.'if\s+(.*?)'.$this->tag_end.')((?:.(?!'.$this->tag_begin.'if.*?'.$this->tag_end.'))*?)'.$this->tag_begin.'\/if'.$this->tag_end.'/s';
 		return preg_replace_callback($pattern, array($this, 'trans_if'), $content);
 	}
 
