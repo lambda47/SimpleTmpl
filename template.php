@@ -26,16 +26,23 @@ class Template {
 		if(!isset($attrs['id'])) {
 			$attrs['id'] = 'item';
 		}
+		$name = $attrs['name'];
+		$name_part_arr = explode('.', $name);
+		$first_part = '$'.array_shift($name_part_arr);
+		$arr_var_str = array_reduce($name_part_arr, function($str, $index_name) {
+			$str .= '[\''.$index_name.'\']';
+			return $str;
+		}, $first_part);
 		if(isset($attrs['offset']) || isset($attrs['length'])) {
 			$offset = isset($attrs['offset']) ? max(intval($attrs['offset']), 1) : 0;
 			$length = isset($attrs['length']) ? intval($attrs['length']) : 0;
 			if($length === 0) {
-				$arr_exp = 'array_slice($'.$attrs['name'].', '.$offset.', NULL, true)';
+				$arr_exp = 'array_slice('.$arr_var_str.', '.$offset.', NULL, true)';
 			} else {
-				$arr_exp = 'array_slice($'.$attrs['name'].', '.$offset.', '.$length.', true)';
+				$arr_exp = 'array_slice('.$arr_var_str.', '.$offset.', '.$length.', true)';
 			}
 		} else {
-			$arr_exp = '$'.$attrs['name'];
+			$arr_exp = $arr_var_str;
 		}
 		$result =  '<?php foreach('.$arr_exp.' as $key => $'.$attrs['id'].'):?>';
 		$result .= $matches[2];
@@ -51,7 +58,14 @@ class Template {
 		if(!isset($attrs['item'])) {
 			$attrs['item'] = 'item';
 		}
-		$result = '<?php foreach($'.$attrs['name'].' as $'.$attrs['key'].' => $'.$attrs['item'].'):?>';
+		$name = $attrs['name'];
+		$name_part_arr = explode('.', $name);
+		$first_part = '$'.array_shift($name_part_arr);
+		$arr_var_str = array_reduce($name_part_arr, function($str, $index_name) {
+			$str .= '[\''.$index_name.'\']';
+			return $str;
+		}, $first_part);
+		$result = '<?php foreach('.$arr_var_str.' as $'.$attrs['key'].' => $'.$attrs['item'].'):?>';
 		$result .= $matches[2];
 		$result .= '<?php endforeach;?>';
 		return $result;
