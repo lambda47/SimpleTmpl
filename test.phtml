@@ -15,7 +15,7 @@
     	<li>{{$it.name}}</li>
     <!--{/if}-->
 <!--{/volist}-->
-<ul>
+</ul>
 <ul>
 <!--{foreach name="fruits" key="k", item="vo"}-->
 	<li>{{$k}}|{{$vo}}</li>
@@ -32,5 +32,10 @@
 		{{$i}}-{{$j}}
 	<!--{/for}-->
 <!--{/for}-->
+<!--{switch name="User.level"}-->
+	<!--{case value="1"}-->value1<!--{/case}-->
+	<!--{case value="2"}-->value2<!--{/case}-->
+	<!--{default/}-->default
+<!--{/switch}-->
 </body>
 </html>

@@ -104,6 +104,21 @@ class Template {
 		return $result;
 	}
 
+	private function trans_switch ($matches) {
+		$attrs = $this->parse_args($matches[1]);
+		$name = $attrs['name'];
+		$name_part_arr = explode('.', $name);
+		$first_part = '$'.array_shift($name_part_arr);
+		$arr_var_str = array_reduce($name_part_arr, function($str, $index_name) {
+			$str .= '[\''.$index_name.'\']';
+			return $str;
+		}, $first_part);
+		$result = '<?php switch('.$arr_var_str.'):?>';
+		$result .= $matches[2];
+		$result .= '<?php endswitch;?>';
+		return $result;
+	}
+
 	private function trans_var($matches) {
 		$var = preg_replace('/\.([^\.]+)/', "['$1']", $matches[1]);
 		$result = '<?php echo '.$var.';?>';
@@ -140,6 +155,11 @@ class Template {
 		return preg_replace_callback($pattern, array($this, 'trans_else'), $content);
 	}
 
+	private function parse_switch($content) {
+		$pattern = '/(?>'.$this->tag_begin.'switch\s+(.*?)'.$this->tag_end.')((?:.(?!'.$this->tag_begin.'switch.*?'.$this->tag_end.'))*?)'.$this->tag_begin.'\/switch'.$this->tag_end.'/s';
+		return preg_replace_callback($pattern, array($this, 'trans_switch'), $content);
+	}
+
 	private function parse_var($content) {
 		$pattern = '/{{(.*?)}}/';
 		return preg_replace_callback($pattern, array($this, 'trans_var'), $content);
@@ -151,6 +171,7 @@ class Template {
 			$content = $this->parse_foreach($content);
 			$content = $this->parse_for($content);
 			$content = $this->parse_if($content);
+			$content = $this->parse_switch($content);
 		}
 		$content = $this->parse_elseif($content);
 		$content = $this->parse_else($content);
