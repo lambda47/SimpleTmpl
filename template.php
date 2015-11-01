@@ -119,6 +119,23 @@ class Template {
 		return $result;
 	}
 
+	private function trans_case ($matches) {
+		$attrs = $this->parse_args($matches[1]);
+		$val = $attrs['value'];
+		if($val[0] === '$') {
+			$val = preg_replace_callback('/(\$[^\.]+)((?:\.\w+)+)/', array($this, 'parse_cond_var'), $val);
+		}
+		$result = '<?php case '.$val.':?>';
+		$result .= $matches[2];
+		$result .= '<?php break;?>';
+		return $result;
+	}
+
+	private function trans_default() {
+		$result = '<?php default:?>';
+		return $result;
+	}
+
 	private function trans_var($matches) {
 		$var = preg_replace('/\.([^\.]+)/', "['$1']", $matches[1]);
 		$result = '<?php echo '.$var.';?>';
@@ -160,6 +177,16 @@ class Template {
 		return preg_replace_callback($pattern, array($this, 'trans_switch'), $content);
 	}
 
+	private function parse_case($content) {
+		$pattern = '/(?>'.$this->tag_begin.'case\s+(.*?)'.$this->tag_end.')((?:.(?!'.$this->tag_begin.'case.*?'.$this->tag_end.'))*?)'.$this->tag_begin.'\/case'.$this->tag_end.'/s';
+		return preg_replace_callback($pattern, array($this, 'trans_case'), $content);
+	}
+
+	private function parse_default($content) {
+		$pattern = '/'.$this->tag_begin.'default\/'.$this->tag_end.'/';
+		return preg_replace_callback($pattern, array($this, 'trans_default'), $content);
+	}
+
 	private function parse_var($content) {
 		$pattern = '/{{(.*?)}}/';
 		return preg_replace_callback($pattern, array($this, 'trans_var'), $content);
@@ -172,9 +199,11 @@ class Template {
 			$content = $this->parse_for($content);
 			$content = $this->parse_if($content);
 			$content = $this->parse_switch($content);
+			$content = $this->parse_case($content);
 		}
 		$content = $this->parse_elseif($content);
 		$content = $this->parse_else($content);
+		$content = $this->parse_default($content);
 		$content = $this->parse_var($content);
 
 		return $content;
