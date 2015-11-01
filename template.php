@@ -121,6 +121,11 @@ class Template {
 
 	private function trans_case ($matches) {
 		$attrs = $this->parse_args($matches[1]);
+		if(!isset($attrs['break'])) {
+			$break = 1;
+		} else {
+			$break = intval($attrs['break']) > 0 ? 1 : 0;
+		}
 		$val = $attrs['value'];
 		$val_arr = explode('|', $val);
 		$val_arr = array_map(function($item) {
@@ -130,7 +135,9 @@ class Template {
 			return $str.'<?php case '.$val.':?>';
 		}, '');
 		$result .= $matches[2];
-		$result .= '<?php break;?>';
+		if($break === 1) {
+			$result .= '<?php break;?>';
+		}
 		return $result;
 	}
 
