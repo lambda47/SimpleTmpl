@@ -122,10 +122,13 @@ class Template {
 	private function trans_case ($matches) {
 		$attrs = $this->parse_args($matches[1]);
 		$val = $attrs['value'];
-		if($val[0] === '$') {
-			$val = preg_replace_callback('/(\$[^\.]+)((?:\.\w+)+)/', array($this, 'parse_cond_var'), $val);
-		}
-		$result = '<?php case '.$val.':?>';
+		$val_arr = explode('|', $val);
+		$val_arr = array_map(function($item) {
+			return $item[0] === '$' ? preg_replace_callback('/(\$[^\.]+)((?:\.\w+)+)/', array($this, 'parse_cond_var'), $item) : $item;
+		}, $val_arr);
+		$result = array_reduce($val_arr, function($str, $val) {
+			return $str.'<?php case '.$val.':?>';
+		}, '');
 		$result .= $matches[2];
 		$result .= '<?php break;?>';
 		return $result;
