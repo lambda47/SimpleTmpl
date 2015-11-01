@@ -146,6 +146,13 @@ class Template {
 		return $result;
 	}
 
+	private function trans_php($matches) {
+		$result = '<?php ';
+		$result .= $matches[1];
+		$result .= ' ?>';
+		return $result;
+	}
+
 	private function trans_var($matches) {
 		$var = preg_replace('/\.([^\.]+)/', "['$1']", $matches[1]);
 		$result = '<?php echo '.$var.';?>';
@@ -197,6 +204,11 @@ class Template {
 		return preg_replace_callback($pattern, array($this, 'trans_default'), $content);
 	}
 
+	private function parse_php($content) {
+		$pattern = '/'.$this->tag_begin.'php'.$this->tag_end.'(.*?)'.$this->tag_begin.'\/php'.$this->tag_end.'/s';
+		return preg_replace_callback($pattern, array($this, 'trans_php'), $content);
+	}
+
 	private function parse_var($content) {
 		$pattern = '/{{(.*?)}}/';
 		return preg_replace_callback($pattern, array($this, 'trans_var'), $content);
@@ -215,6 +227,7 @@ class Template {
 		$content = $this->parse_else($content);
 		$content = $this->parse_default($content);
 		$content = $this->parse_var($content);
+		$content = $this->parse_php($content);
 
 		return $content;
 	}
