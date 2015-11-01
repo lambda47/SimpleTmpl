@@ -3,6 +3,17 @@ class Template {
 	private $tag_begin = '<!--{';
 	private $tag_end = '}-->';
 	private $level = 3;
+	private $rand_id = '';
+
+	private static function rand_str($len) {
+		$srand_str = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+		$srand_len = strlen($srand_str);
+		$str = '';
+		for($i = 0; $i < $len; $i++) {
+			$str .= $srand_str[rand(0, $srand_len - 1)];
+		}
+		return $str;
+	}
 
 	private function parse_args($args) {
 		$attrs = array();
@@ -159,6 +170,10 @@ class Template {
 		return $result;
 	}
 
+	private function trans_literal() {
+
+	}
+
 	private function parse_volist($content) {
 		$pattern = '/(?>'.$this->tag_begin.'volist\s+(.*?)'.$this->tag_end.')((?:.(?!'.$this->tag_begin.'volist.*?'.$this->tag_end.'))*?)'.$this->tag_begin.'\/volist'.$this->tag_end.'/s';
 		return preg_replace_callback($pattern, array($this, 'trans_volist'), $content);
@@ -214,7 +229,24 @@ class Template {
 		return preg_replace_callback($pattern, array($this, 'trans_var'), $content);
 	}
 
+	private function literal_transfer($content, $flag = 0) {
+		if($flag === 0) {
+			$this->rand_id = self::rand_str(6);
+		}
+		$pattern = '/'.$this->tag_begin.'literal'.$this->tag_end.'(.*?)'.$this->tag_begin.'\/literal'.$this->tag_end.'/s';
+		return preg_replace_callback($pattern, function($matches) use ($flag) {
+			$source = array($this->tag_begin, $this->tag_end, '{{', '}}');
+			$destin = array('[@'.$this->rand_id, $this->rand_id.'@]', '{@'.$this->rand_id, $this->rand_id.'@}');
+			if($flag === 0) {
+				return $this->tag_begin.'literal'.$this->tag_end.str_replace($source, $destin, $matches[1]).$this->tag_begin.'/literal'.$this->tag_end;
+			} else {
+				return str_replace($destin, $source, $matches[1]);
+			}
+		}, $content);
+	}
+
 	public function parse($content) {
+		$content = $this->literal_transfer($content);
 		for($i = 0; $i < $this->level; $i++) {
 			$content = $this->parse_volist($content);
 			$content = $this->parse_foreach($content);
@@ -228,7 +260,7 @@ class Template {
 		$content = $this->parse_default($content);
 		$content = $this->parse_var($content);
 		$content = $this->parse_php($content);
-
+		$content = $this->literal_transfer($content, 1);
 		return $content;
 	}
 }
