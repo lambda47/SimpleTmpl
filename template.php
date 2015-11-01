@@ -170,10 +170,6 @@ class Template {
 		return $result;
 	}
 
-	private function trans_literal() {
-
-	}
-
 	private function parse_volist($content) {
 		$pattern = '/(?>'.$this->tag_begin.'volist\s+(.*?)'.$this->tag_end.')((?:.(?!'.$this->tag_begin.'volist.*?'.$this->tag_end.'))*?)'.$this->tag_begin.'\/volist'.$this->tag_end.'/s';
 		return preg_replace_callback($pattern, array($this, 'trans_volist'), $content);
