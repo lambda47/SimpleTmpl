@@ -9,7 +9,7 @@
 		<!--{if condition="$it.num > 0"}-->
 			<li>{{$it.name}}</li>
 		<!--{/if}-->
-    <!--{elseif condition="$it.type.no == 1"/}-->
+    <!--{elseif condition="$it.type.no == 1"/}--><!--{//Else if condition.}-->
     	<li>{{$it.name}}</li>
     <!--{else/}-->
     	<li>{{$it.name}}</li>
@@ -25,6 +25,7 @@
 <!--{for start="10" end="50" name="j" step="2"}-->
 	{{$j}}
 <!--{/for}-->
+<!--{/*Don't parse!*/}-->
 <!--{/literal}-->
 <!--{for start="10" end="50" name="j" step="2"}-->
 	{{$j}}

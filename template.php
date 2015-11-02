@@ -241,6 +241,12 @@ class Template {
 		}, $content);
 	}
 
+	private function parse_comment($content) {
+		$content = preg_replace('/'.$this->tag_begin.'\/\/.*?'.$this->tag_end.'/m', '', $content);
+		$content = preg_replace('/'.$this->tag_begin.'\/\*.*?'.$this->tag_end.'\*\//m', '', $content);
+		return $content;
+	}
+
 	public function parse($content) {
 		$content = $this->literal_transfer($content);
 		for($i = 0; $i < $this->level; $i++) {
@@ -257,6 +263,7 @@ class Template {
 		$content = $this->parse_var($content);
 		$content = $this->parse_php($content);
 		$content = $this->literal_transfer($content, 1);
+		$content = $this->parse_comment($content);
 		return $content;
 	}
 }
