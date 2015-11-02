@@ -170,6 +170,13 @@ class Template {
 		return $result;
 	}
 
+	private function trans_include($matches) {
+		$attrs = $this->parse_args($matches[1]);
+		$file_name = $attrs['file'];
+		$include_tmp_content = file_get_contents($file_name);
+		return $this->parse($include_tmp_content);
+	}
+
 	private function parse_volist($content) {
 		$pattern = '/(?>'.$this->tag_begin.'volist\s+(.*?)'.$this->tag_end.')((?:.(?!'.$this->tag_begin.'volist.*?'.$this->tag_end.'))*?)'.$this->tag_begin.'\/volist'.$this->tag_end.'/s';
 		return preg_replace_callback($pattern, array($this, 'trans_volist'), $content);
@@ -247,7 +254,13 @@ class Template {
 		return $content;
 	}
 
+	private function parse_include($content) {
+		$pattern = '/'.$this->tag_begin.'include\s+(.*?)\/'.$this->tag_end.'/s';
+		return preg_replace_callback($pattern, array($this, 'trans_include'), $content);
+	}
+
 	public function parse($content) {
+		$content = $this->parse_include($content);
 		$content = $this->literal_transfer($content);
 		for($i = 0; $i < $this->level; $i++) {
 			$content = $this->parse_volist($content);
