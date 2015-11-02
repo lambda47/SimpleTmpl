@@ -18,7 +18,7 @@
 </ul>
 <ul>
 <!--{foreach name="fruits" key="k", item="vo"}-->
-	<li>{{$k}}|{{$vo}}</li>
+	<li>{{$k}}|{{$vo.id + 1}}</li>
 <!--{/foreach}-->
 </ul>
 <!--{literal}-->
@@ -32,7 +32,7 @@
 <!--{/for}-->
 <!--{for start="10" end="50" name="i" step="2"}-->
 	<!--{for start="10" end="50" name="j" step="2"}-->
-		{{$i}}-{{$j}}
+		{{$i + 1}}-{{$i * $j}}
 	<!--{/for}-->
 <!--{/for}-->
 <!--{switch name="User.level"}-->

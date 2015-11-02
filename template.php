@@ -165,7 +165,7 @@ class Template {
 	}
 
 	private function trans_var($matches) {
-		$var = preg_replace('/\.([^\.]+)/', "['$1']", $matches[1]);
+		$var = preg_replace_callback('/(\$[^\.]+)((?:\.\w+)+)/', array($this, 'parse_cond_var'), $matches[1]);
 		$result = '<?php echo '.$var.';?>';
 		return $result;
 	}
