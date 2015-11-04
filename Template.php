@@ -260,7 +260,7 @@ class Template {
 
 	private function parse_comment($content) {
 		$content = preg_replace('/'.$this->left_delimiter .'\/\/.*?'.$this->right_delimiter .'/m', '', $content);
-		$content = preg_replace('/'.$this->left_delimiter .'\/\*.*?'.$this->right_delimiter .'\*\//m', '', $content);
+		$content = preg_replace('/'.$this->left_delimiter .'\/\*.*?\*\/'.$this->right_delimiter .'/s', '', $content);
 		return $content;
 	}
 
