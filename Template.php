@@ -1,9 +1,19 @@
 <?php
 class Template {
-	private $tag_begin = '<!--{';
-	private $tag_end = '}-->';
-	private $level = 3;
+	private $left_delimiter  = '<!--{';
+	private $right_delimiter  = '}-->';
+	private $depth = 3;
 	private $rand_id = '';
+	private $template_dir = '';
+	private $cache_dir = '';
+
+	public function Template($config) {
+		$this->left_delimiter = empty($config['left_delimiter']) ? $this->liet_delimiter : $config['left_delimiter'];
+		$this->right_delimiter = empty($config['right_delimiter']) ? $this->right_delimiter : $config['right_delimiter'];
+		$this->depth = empty($config['depth']) ? $this->depth : $config['depth'];
+		$this->template_dir = empty($config['template_dir']) ? $this->template_dir : $config['template_dir'];
+		$this->cache_dir = empty($config['cache_dir']) ? $this->cache_dir : $config['cache_dir'];
+	}
 
 	private static function rand_str($len) {
 		$srand_str = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -178,52 +188,52 @@ class Template {
 	}
 
 	private function parse_volist($content) {
-		$pattern = '/(?>'.$this->tag_begin.'volist\s+(.*?)'.$this->tag_end.')((?:.(?!'.$this->tag_begin.'volist.*?'.$this->tag_end.'))*?)'.$this->tag_begin.'\/volist'.$this->tag_end.'/s';
+		$pattern = '/(?>'.$this->left_delimiter .'volist\s+(.*?)'.$this->right_delimiter .')((?:.(?!'.$this->left_delimiter .'volist.*?'.$this->right_delimiter .'))*?)'.$this->left_delimiter .'\/volist'.$this->right_delimiter .'/s';
 		return preg_replace_callback($pattern, array($this, 'trans_volist'), $content);
 	}
 
 	private function parse_foreach($content) {
-		$pattern = '/(?>'.$this->tag_begin.'foreach\s+(.*?)'.$this->tag_end.')((?:.(?!'.$this->tag_begin.'foreach.*?'.$this->tag_end.'))*?)'.$this->tag_begin.'\/foreach'.$this->tag_end.'/s';
+		$pattern = '/(?>'.$this->left_delimiter .'foreach\s+(.*?)'.$this->right_delimiter .')((?:.(?!'.$this->left_delimiter .'foreach.*?'.$this->right_delimiter .'))*?)'.$this->left_delimiter .'\/foreach'.$this->right_delimiter .'/s';
 		return preg_replace_callback($pattern, array($this, 'trans_foreach'), $content);
 	}
 
 	private function parse_for($content) {
-		$pattern = '/(?>'.$this->tag_begin.'for\s+(.*?)'.$this->tag_end.')((?:.(?!'.$this->tag_begin.'for.*?'.$this->tag_end.'))*?)'.$this->tag_begin.'\/for'.$this->tag_end.'/s';
+		$pattern = '/(?>'.$this->left_delimiter .'for\s+(.*?)'.$this->right_delimiter .')((?:.(?!'.$this->left_delimiter .'for.*?'.$this->right_delimiter .'))*?)'.$this->left_delimiter .'\/for'.$this->right_delimiter .'/s';
 		return preg_replace_callback($pattern, array($this, 'trans_for'), $content);
 	}
 
 	private function parse_if($content) {
-		$pattern = '/(?>'.$this->tag_begin.'if\s+(.*?)'.$this->tag_end.')((?:.(?!'.$this->tag_begin.'if.*?'.$this->tag_end.'))*?)'.$this->tag_begin.'\/if'.$this->tag_end.'/s';
+		$pattern = '/(?>'.$this->left_delimiter .'if\s+(.*?)'.$this->right_delimiter .')((?:.(?!'.$this->left_delimiter .'if.*?'.$this->right_delimiter .'))*?)'.$this->left_delimiter .'\/if'.$this->right_delimiter .'/s';
 		return preg_replace_callback($pattern, array($this, 'trans_if'), $content);
 	}
 
 	private function parse_elseif($content) {
-		$pattern = '/'.$this->tag_begin.'elseif\s+(.*?)\/'.$this->tag_end.'/s';
+		$pattern = '/'.$this->left_delimiter .'elseif\s+(.*?)\/'.$this->right_delimiter .'/s';
 		return preg_replace_callback($pattern, array($this, 'trans_elseif'), $content);
 	}
 
 	private function parse_else($content) {
-		$pattern = '/'.$this->tag_begin.'else\/'.$this->tag_end.'/s';
+		$pattern = '/'.$this->left_delimiter .'else\/'.$this->right_delimiter .'/s';
 		return preg_replace_callback($pattern, array($this, 'trans_else'), $content);
 	}
 
 	private function parse_switch($content) {
-		$pattern = '/(?>'.$this->tag_begin.'switch\s+(.*?)'.$this->tag_end.')((?:.(?!'.$this->tag_begin.'switch.*?'.$this->tag_end.'))*?)'.$this->tag_begin.'\/switch'.$this->tag_end.'/s';
+		$pattern = '/(?>'.$this->left_delimiter .'switch\s+(.*?)'.$this->right_delimiter .')((?:.(?!'.$this->left_delimiter .'switch.*?'.$this->right_delimiter .'))*?)'.$this->left_delimiter .'\/switch'.$this->right_delimiter .'/s';
 		return preg_replace_callback($pattern, array($this, 'trans_switch'), $content);
 	}
 
 	private function parse_case($content) {
-		$pattern = '/(?>'.$this->tag_begin.'case\s+(.*?)'.$this->tag_end.')((?:.(?!'.$this->tag_begin.'case.*?'.$this->tag_end.'))*?)'.$this->tag_begin.'\/case'.$this->tag_end.'/s';
+		$pattern = '/(?>'.$this->left_delimiter .'case\s+(.*?)'.$this->right_delimiter .')((?:.(?!'.$this->left_delimiter .'case.*?'.$this->right_delimiter .'))*?)'.$this->left_delimiter .'\/case'.$this->right_delimiter .'/s';
 		return preg_replace_callback($pattern, array($this, 'trans_case'), $content);
 	}
 
 	private function parse_default($content) {
-		$pattern = '/'.$this->tag_begin.'default\/'.$this->tag_end.'/';
+		$pattern = '/'.$this->left_delimiter .'default\/'.$this->right_delimiter .'/';
 		return preg_replace_callback($pattern, array($this, 'trans_default'), $content);
 	}
 
 	private function parse_php($content) {
-		$pattern = '/'.$this->tag_begin.'php'.$this->tag_end.'(.*?)'.$this->tag_begin.'\/php'.$this->tag_end.'/s';
+		$pattern = '/'.$this->left_delimiter .'php'.$this->right_delimiter .'(.*?)'.$this->left_delimiter .'\/php'.$this->right_delimiter .'/s';
 		return preg_replace_callback($pattern, array($this, 'trans_php'), $content);
 	}
 
@@ -236,12 +246,12 @@ class Template {
 		if($flag === 0) {
 			$this->rand_id = self::rand_str(6);
 		}
-		$pattern = '/'.$this->tag_begin.'literal'.$this->tag_end.'(.*?)'.$this->tag_begin.'\/literal'.$this->tag_end.'/s';
+		$pattern = '/'.$this->left_delimiter .'literal'.$this->right_delimiter .'(.*?)'.$this->left_delimiter .'\/literal'.$this->right_delimiter .'/s';
 		return preg_replace_callback($pattern, function($matches) use ($flag) {
-			$source = array($this->tag_begin, $this->tag_end, '{{', '}}');
+			$source = array($this->left_delimiter , $this->right_delimiter , '{{', '}}');
 			$destin = array('[@'.$this->rand_id, $this->rand_id.'@]', '{@'.$this->rand_id, $this->rand_id.'@}');
 			if($flag === 0) {
-				return $this->tag_begin.'literal'.$this->tag_end.str_replace($source, $destin, $matches[1]).$this->tag_begin.'/literal'.$this->tag_end;
+				return $this->left_delimiter .'literal'.$this->right_delimiter .str_replace($source, $destin, $matches[1]).$this->left_delimiter .'/literal'.$this->right_delimiter ;
 			} else {
 				return str_replace($destin, $source, $matches[1]);
 			}
@@ -249,20 +259,20 @@ class Template {
 	}
 
 	private function parse_comment($content) {
-		$content = preg_replace('/'.$this->tag_begin.'\/\/.*?'.$this->tag_end.'/m', '', $content);
-		$content = preg_replace('/'.$this->tag_begin.'\/\*.*?'.$this->tag_end.'\*\//m', '', $content);
+		$content = preg_replace('/'.$this->left_delimiter .'\/\/.*?'.$this->right_delimiter .'/m', '', $content);
+		$content = preg_replace('/'.$this->left_delimiter .'\/\*.*?'.$this->right_delimiter .'\*\//m', '', $content);
 		return $content;
 	}
 
 	private function parse_include($content) {
-		$pattern = '/'.$this->tag_begin.'include\s+(.*?)\/'.$this->tag_end.'/s';
+		$pattern = '/'.$this->left_delimiter .'include\s+(.*?)\/'.$this->right_delimiter .'/s';
 		return preg_replace_callback($pattern, array($this, 'trans_include'), $content);
 	}
 
 	public function parse($content) {
 		$content = $this->parse_include($content);
 		$content = $this->literal_transfer($content);
-		for($i = 0; $i < $this->level; $i++) {
+		for($i = 0; $i < $this->depth; $i++) {
 			$content = $this->parse_volist($content);
 			$content = $this->parse_foreach($content);
 			$content = $this->parse_for($content);
