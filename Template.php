@@ -7,6 +7,19 @@ class Template
     private $rand_id = '';
     private $template_dir = '';
     private $cache_dir = '';
+	private $tag_with_end = array(
+		array('name' => 'volist', 'has_attr' => true),
+		array('name' => 'foreach', 'has_attr' => true),
+		array('name' => 'for', 'has_attr' => true),
+		array('name' => 'if', 'has_attr' => true),
+		array('name' => 'switch', 'has_attr' => true),
+		array('name' => 'case', 'has_attr' => true)
+	);
+	private $tag_without_end = array(
+		array('name' => 'elseif', 'has_attr' => true),
+		array('name' => 'else', 'has_attr' => false),
+		array('name' => 'default', 'has_attr' => false)
+	);
 
     public function Template($config)
 	{
@@ -172,13 +185,6 @@ class Template
         return $result;
     }
 
-    private function trans_php($matches) {
-        $result = '<?php ';
-        $result .= $matches[1];
-        $result .= ' ?>';
-        return $result;
-    }
-
     private function trans_include($matches) {
         $attrs = $this->parse_args($matches[1]);
         $file_name = $attrs['file'];
@@ -186,54 +192,16 @@ class Template
         return $this->parse($include_tmp_content);
     }
 
-    private function parse_volist($content) {
-        $pattern = '/(?>'.$this->left_delimiter .'volist\s+(.*?)'.$this->right_delimiter .')((?:.(?!'.$this->left_delimiter .'volist.*?'.$this->right_delimiter .'))*?)'.$this->left_delimiter .'\/volist'.$this->right_delimiter .'/s';
-        return preg_replace_callback($pattern, array($this, 'trans_volist'), $content);
-    }
-
-    private function parse_foreach($content) {
-        $pattern = '/(?>'.$this->left_delimiter .'foreach\s+(.*?)'.$this->right_delimiter .')((?:.(?!'.$this->left_delimiter .'foreach.*?'.$this->right_delimiter .'))*?)'.$this->left_delimiter .'\/foreach'.$this->right_delimiter .'/s';
-        return preg_replace_callback($pattern, array($this, 'trans_foreach'), $content);
-    }
-
-    private function parse_for($content) {
-        $pattern = '/(?>'.$this->left_delimiter .'for\s+(.*?)'.$this->right_delimiter .')((?:.(?!'.$this->left_delimiter .'for.*?'.$this->right_delimiter .'))*?)'.$this->left_delimiter .'\/for'.$this->right_delimiter .'/s';
-        return preg_replace_callback($pattern, array($this, 'trans_for'), $content);
-    }
-
-    private function parse_if($content) {
-        $pattern = '/(?>'.$this->left_delimiter .'if\s+(.*?)'.$this->right_delimiter .')((?:.(?!'.$this->left_delimiter .'if.*?'.$this->right_delimiter .'))*?)'.$this->left_delimiter .'\/if'.$this->right_delimiter .'/s';
-        return preg_replace_callback($pattern, array($this, 'trans_if'), $content);
-    }
-
-    private function parse_elseif($content) {
-        $pattern = '/'.$this->left_delimiter .'elseif\s+(.*?)\/'.$this->right_delimiter .'/s';
-        return preg_replace_callback($pattern, array($this, 'trans_elseif'), $content);
-    }
-
-    private function parse_else($content) {
-        $pattern = '/'.$this->left_delimiter .'else\/'.$this->right_delimiter .'/s';
-        return preg_replace_callback($pattern, array($this, 'trans_else'), $content);
-    }
-
-    private function parse_switch($content) {
-        $pattern = '/(?>'.$this->left_delimiter .'switch\s+(.*?)'.$this->right_delimiter .')((?:.(?!'.$this->left_delimiter .'switch.*?'.$this->right_delimiter .'))*?)'.$this->left_delimiter .'\/switch'.$this->right_delimiter .'/s';
-        return preg_replace_callback($pattern, array($this, 'trans_switch'), $content);
-    }
-
-    private function parse_case($content) {
-        $pattern = '/(?>'.$this->left_delimiter .'case\s+(.*?)'.$this->right_delimiter .')((?:.(?!'.$this->left_delimiter .'case.*?'.$this->right_delimiter .'))*?)'.$this->left_delimiter .'\/case'.$this->right_delimiter .'/s';
-        return preg_replace_callback($pattern, array($this, 'trans_case'), $content);
-    }
-
-    private function parse_default($content) {
-        $pattern = '/'.$this->left_delimiter .'default\/'.$this->right_delimiter .'/';
-        return preg_replace_callback($pattern, array($this, 'trans_default'), $content);
-    }
-
-    private function parse_php($content) {
-        $pattern = '/'.$this->left_delimiter .'php'.$this->right_delimiter .'(.*?)'.$this->left_delimiter .'\/php'.$this->right_delimiter .'/s';
-        return preg_replace_callback($pattern, array($this, 'trans_php'), $content);
+    private function phpTrans($content) {
+		$left_delimiter = preg_quote($this->left_delimiter);
+		$right_delimiter = preg_quote($this->right_delimiter);
+        $pattern = '/'.$left_delimiter .'php'.$right_delimiter .'(.*?)'.$left_delimiter .'\/php'.$right_delimiter .'/s';
+        return preg_replace_callback($pattern, function($matches) {
+			$result = '<?php ';
+			$result .= $matches[1];
+			$result .= ' ?>';
+			return $result;
+		}, $content);
     }
 
     private function varTransfer($content)
@@ -246,7 +214,8 @@ class Template
 		}, $content);
     }
 
-    private function literalTransfer($content, $flag = 0) {
+    private function literalTrans($content, $flag = 0)
+	{
         if($flag === 0) {
             $this->rand_id = self::randStr(6);
         }
@@ -262,7 +231,8 @@ class Template
         }, $content);
     }
 
-    private function commentTransfer($content) {
+    private function commentTrans($content)
+	{
         $content = preg_replace('/'.$this->left_delimiter .'\/\/.*?'.$this->right_delimiter .'/m', '', $content);
         $content = preg_replace('/'.$this->left_delimiter .'\/\*.*?\*\/'.$this->right_delimiter .'/s', '', $content);
         return $content;
@@ -273,24 +243,39 @@ class Template
         return preg_replace_callback($pattern, array($this, 'trans_include'), $content);
     }
 
+	private function tagWithEndTrans($content)
+	{
+		foreach($this->tag_with_end as $tag) {
+			$left_delimiter = preg_quote($this->left_delimiter);
+			$right_delimiter = preg_quote($this->right_delimiter);
+			$pattern = '/(?>'.$left_delimiter .$tag['name'].($tag['has_attr'] ? '\s+(.*?)' : '').$right_delimiter .')((?:.(?!'.$left_delimiter .$tag['name'].'.*?'.$right_delimiter .'))*?)'.$left_delimiter .'\/'.$tag['name'].$right_delimiter .'/s';
+			$content = preg_replace_callback($pattern, array($this, 'trans_'.$tag['name']), $content);
+		}
+		return $content;
+	}
+
+	private function tagWithoutEndTrans($content)
+	{
+		foreach($this->tag_without_end as $tag) {
+			$left_delimiter = preg_quote($this->left_delimiter);
+			$right_delimiter = preg_quote($this->right_delimiter);
+			$pattern = '/'.$left_delimiter .$tag['name'].($tag['has_attr'] ? '\s+(.*?)' : '').'\/'.$right_delimiter .'/s';
+			$content = preg_replace_callback($pattern, array($this, 'trans_'.$tag['name']), $content);
+		}
+		return $content;
+	}
+
     public function parse($content) {
         $content = $this->parse_include($content);
-        $content = $this->literalTransfer($content);
+        $content = $this->literalTrans($content);
         for($i = 0; $i < $this->depth; $i++) {
-            $content = $this->parse_volist($content);
-            $content = $this->parse_foreach($content);
-            $content = $this->parse_for($content);
-            $content = $this->parse_if($content);
-            $content = $this->parse_switch($content);
-            $content = $this->parse_case($content);
+            $content = $this->tagWithEndTrans($content);
         }
-        $content = $this->parse_elseif($content);
-        $content = $this->parse_else($content);
-        $content = $this->parse_default($content);
+        $content = $this->tagWithoutEndTrans($content);
         $content = $this->varTransfer($content);
-        $content = $this->parse_php($content);
-        $content = $this->literalTransfer($content, 1);
-        $content = $this->commentTransfer($content);
+        $content = $this->phpTrans($content);
+        $content = $this->literalTrans($content, 1);
+        $content = $this->commentTrans($content);
         return $content;
     }
 }
