@@ -8,7 +8,8 @@ class Template
     private $template_dir = '';
     private $cache_dir = '';
 
-    public function Template($config) {
+    public function Template($config)
+	{
         $this->left_delimiter = empty($config['left_delimiter']) ? $this->liet_delimiter : $config['left_delimiter'];
         $this->right_delimiter = empty($config['right_delimiter']) ? $this->right_delimiter : $config['right_delimiter'];
         $this->depth = empty($config['depth']) ? $this->depth : $config['depth'];
@@ -16,7 +17,8 @@ class Template
         $this->cache_dir = empty($config['cache_dir']) ? $this->cache_dir : $config['cache_dir'];
     }
 
-    private static function rand_str($len) {
+    private static function randStr($len)
+	{
         $srand_str = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         $srand_len = strlen($srand_str);
         $str = '';
@@ -26,7 +28,8 @@ class Template
         return $str;
     }
 
-    private function parse_args($args) {
+    private function parse_args($args)
+	{
         $attrs = array();
         preg_match_all('/[^\s=]*=".*?"/', $args, $matches);
         foreach($matches[0] as $match) {
@@ -36,7 +39,8 @@ class Template
         return $attrs;
     }
 
-    private function parse_cond_var($matches) {
+    private function expTransfer($matches)
+	{
         $keys_arr = explode('.', substr($matches[2], 1));
         return $matches[1].array_reduce($keys_arr, function($str, $item){
             return $str.'[\''.$item.'\']';
@@ -107,7 +111,7 @@ class Template
 
     private function trans_if ($matches) {
         $attrs = $this->parse_args($matches[1]);
-        $condition = preg_replace_callback('/(\$[^\.]+)((?:\.\w+)+)/', array($this, 'parse_cond_var'), $attrs['condition']);
+        $condition = preg_replace_callback('/(\$[^\.]+)((?:\.\w+)+)/', array($this, 'expTransfer'), $attrs['condition']);
         $result = '<?php if('.$condition.'):?>';
         $result .= $matches[2];
         $result .= '<?php endif;?>';
@@ -116,7 +120,7 @@ class Template
 
     private function trans_elseif ($matches) {
         $attrs = $this->parse_args($matches[1]);
-        $condition = preg_replace_callback('/(\$[^\.]+)((?:\.\w+)+)/', array($this, 'parse_cond_var'), $attrs['condition']);
+        $condition = preg_replace_callback('/(\$[^\.]+)((?:\.\w+)+)/', array($this, 'expTransfer'), $attrs['condition']);
         $result = '<?php elseif('.$condition.'):?>';
         return $result;
     }
@@ -151,7 +155,7 @@ class Template
         $val = $attrs['value'];
         $val_arr = explode('|', $val);
         $val_arr = array_map(function($item) {
-            return $item[0] === '$' ? preg_replace_callback('/(\$[^\.]+)((?:\.\w+)+)/', array($this, 'parse_cond_var'), $item) : $item;
+            return $item[0] === '$' ? preg_replace_callback('/(\$[^\.]+)((?:\.\w+)+)/', array($this, 'expTransfer'), $item) : $item;
         }, $val_arr);
         $result = array_reduce($val_arr, function($str, $val) {
             return $str.'<?php case '.$val.':?>';
@@ -172,12 +176,6 @@ class Template
         $result = '<?php ';
         $result .= $matches[1];
         $result .= ' ?>';
-        return $result;
-    }
-
-    private function trans_var($matches) {
-        $var = preg_replace_callback('/(\$[^\.]+)((?:\.\w+)+)/', array($this, 'parse_cond_var'), $matches[1]);
-        $result = '<?php echo '.$var.';?>';
         return $result;
     }
 
@@ -238,14 +236,19 @@ class Template
         return preg_replace_callback($pattern, array($this, 'trans_php'), $content);
     }
 
-    private function parse_var($content) {
+    private function varTransfer($content)
+	{
         $pattern = '/{{(.*?)}}/';
-        return preg_replace_callback($pattern, array($this, 'trans_var'), $content);
+        return preg_replace_callback($pattern, function($matches) {
+			$var = preg_replace_callback('/(\$[^\.]+)((?:\.\w+)+)/', array($this, 'expTransfer'), $matches[1]);
+			$result = '<?php echo '.$var.';?>';
+			return $result;
+		}, $content);
     }
 
     private function literalTransfer($content, $flag = 0) {
         if($flag === 0) {
-            $this->rand_id = self::rand_str(6);
+            $this->rand_id = self::randStr(6);
         }
         $pattern = '/'.$this->left_delimiter .'literal'.$this->right_delimiter .'(.*?)'.$this->left_delimiter .'\/literal'.$this->right_delimiter .'/s';
         return preg_replace_callback($pattern, function($matches) use ($flag) {
@@ -284,7 +287,7 @@ class Template
         $content = $this->parse_elseif($content);
         $content = $this->parse_else($content);
         $content = $this->parse_default($content);
-        $content = $this->parse_var($content);
+        $content = $this->varTransfer($content);
         $content = $this->parse_php($content);
         $content = $this->literalTransfer($content, 1);
         $content = $this->commentTransfer($content);
