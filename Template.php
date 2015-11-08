@@ -52,7 +52,7 @@ class Template
         return $attrs;
     }
 
-    private function expTransfer($matches)
+    private function expTrans($matches)
 	{
         $keys_arr = explode('.', substr($matches[2], 1));
         return $matches[1].array_reduce($keys_arr, function($str, $item){
@@ -124,7 +124,7 @@ class Template
 
     private function trans_if ($matches) {
         $attrs = $this->parse_args($matches[1]);
-        $condition = preg_replace_callback('/(\$[^\.]+)((?:\.\w+)+)/', array($this, 'expTransfer'), $attrs['condition']);
+        $condition = preg_replace_callback('/(\$[^\.]+)((?:\.\w+)+)/', array($this, 'expTrans'), $attrs['condition']);
         $result = '<?php if('.$condition.'):?>';
         $result .= $matches[2];
         $result .= '<?php endif;?>';
@@ -133,7 +133,7 @@ class Template
 
     private function trans_elseif ($matches) {
         $attrs = $this->parse_args($matches[1]);
-        $condition = preg_replace_callback('/(\$[^\.]+)((?:\.\w+)+)/', array($this, 'expTransfer'), $attrs['condition']);
+        $condition = preg_replace_callback('/(\$[^\.]+)((?:\.\w+)+)/', array($this, 'expTrans'), $attrs['condition']);
         $result = '<?php elseif('.$condition.'):?>';
         return $result;
     }
@@ -168,7 +168,7 @@ class Template
         $val = $attrs['value'];
         $val_arr = explode('|', $val);
         $val_arr = array_map(function($item) {
-            return $item[0] === '$' ? preg_replace_callback('/(\$[^\.]+)((?:\.\w+)+)/', array($this, 'expTransfer'), $item) : $item;
+            return $item[0] === '$' ? preg_replace_callback('/(\$[^\.]+)((?:\.\w+)+)/', array($this, 'expTrans'), $item) : $item;
         }, $val_arr);
         $result = array_reduce($val_arr, function($str, $val) {
             return $str.'<?php case '.$val.':?>';
@@ -204,11 +204,11 @@ class Template
 		}, $content);
     }
 
-    private function varTransfer($content)
+    private function varTrans($content)
 	{
         $pattern = '/{{(.*?)}}/';
         return preg_replace_callback($pattern, function($matches) {
-			$var = preg_replace_callback('/(\$[^\.]+)((?:\.\w+)+)/', array($this, 'expTransfer'), $matches[1]);
+			$var = preg_replace_callback('/(\$[^\.]+)((?:\.\w+)+)/', array($this, 'expTrans'), $matches[1]);
 			$result = '<?php echo '.$var.';?>';
 			return $result;
 		}, $content);
@@ -272,7 +272,7 @@ class Template
             $content = $this->tagWithEndTrans($content);
         }
         $content = $this->tagWithoutEndTrans($content);
-        $content = $this->varTransfer($content);
+        $content = $this->varTrans($content);
         $content = $this->phpTrans($content);
         $content = $this->literalTrans($content, 1);
         $content = $this->commentTrans($content);
