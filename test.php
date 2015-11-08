@@ -8,4 +8,4 @@ $template = new Template(array(
     'cache_dir' => 'cache'
 ));
 $content = file_get_contents('test.phtml');
-highlight_string($template->parse($content));
+highlight_string($template->trans($content));

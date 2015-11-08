@@ -60,7 +60,8 @@ class Template
         }, '');
     }
 
-    private function trans_volist($matches) {
+    private function volistHandler($matches)
+	{
         $attrs = $this->parse_args($matches[1]);
         if(!isset($attrs['id'])) {
             $attrs['id'] = 'item';
@@ -89,7 +90,8 @@ class Template
         return $result;
     }
 
-    private function trans_foreach($matches) {
+    private function foreachHandler($matches)
+	{
         $attrs = $this->parse_args($matches[1]);
         if(!isset($attrs['key'])) {
             $attrs['key'] = 'key';
@@ -110,7 +112,8 @@ class Template
         return $result;
     }
 
-    private function trans_for($matches) {
+    private function forHandler($matches)
+	{
         $attrs = $this->parse_args($matches[1]);
         if(!isset($attrs['name'])) {
             $attrs['name'] = 'i';
@@ -122,7 +125,8 @@ class Template
         return $result;
     }
 
-    private function trans_if ($matches) {
+    private function ifHandler($matches)
+	{
         $attrs = $this->parse_args($matches[1]);
         $condition = preg_replace_callback('/(\$[^\.]+)((?:\.\w+)+)/', array($this, 'expTrans'), $attrs['condition']);
         $result = '<?php if('.$condition.'):?>';
@@ -131,19 +135,21 @@ class Template
         return $result;
     }
 
-    private function trans_elseif ($matches) {
+    private function elseifHandler($matches)
+	{
         $attrs = $this->parse_args($matches[1]);
         $condition = preg_replace_callback('/(\$[^\.]+)((?:\.\w+)+)/', array($this, 'expTrans'), $attrs['condition']);
         $result = '<?php elseif('.$condition.'):?>';
         return $result;
     }
 
-    private function trans_else () {
+    private function elseHandler()
+	{
         $result = '<?php else:?>';
         return $result;
     }
 
-    private function trans_switch ($matches) {
+    private function switchHandler($matches) {
         $attrs = $this->parse_args($matches[1]);
         $name = $attrs['name'];
         $name_part_arr = explode('.', $name);
@@ -158,7 +164,8 @@ class Template
         return $result;
     }
 
-    private function trans_case ($matches) {
+    private function caseHandler($matches)
+	{
         $attrs = $this->parse_args($matches[1]);
         if(!isset($attrs['break'])) {
             $break = 1;
@@ -180,7 +187,8 @@ class Template
         return $result;
     }
 
-    private function trans_default() {
+    private function defaultHandler()
+	{
         $result = '<?php default:?>';
         return $result;
     }
@@ -189,10 +197,11 @@ class Template
         $attrs = $this->parse_args($matches[1]);
         $file_name = $attrs['file'];
         $include_tmp_content = file_get_contents($file_name);
-        return $this->parse($include_tmp_content);
+        return $this->trans($include_tmp_content);
     }
 
-    private function phpTrans($content) {
+    private function phpTrans($content)
+	{
 		$left_delimiter = preg_quote($this->left_delimiter);
 		$right_delimiter = preg_quote($this->right_delimiter);
         $pattern = '/'.$left_delimiter .'php'.$right_delimiter .'(.*?)'.$left_delimiter .'\/php'.$right_delimiter .'/s';
@@ -249,7 +258,7 @@ class Template
 			$left_delimiter = preg_quote($this->left_delimiter);
 			$right_delimiter = preg_quote($this->right_delimiter);
 			$pattern = '/(?>'.$left_delimiter .$tag['name'].($tag['has_attr'] ? '\s+(.*?)' : '').$right_delimiter .')((?:.(?!'.$left_delimiter .$tag['name'].'.*?'.$right_delimiter .'))*?)'.$left_delimiter .'\/'.$tag['name'].$right_delimiter .'/s';
-			$content = preg_replace_callback($pattern, array($this, 'trans_'.$tag['name']), $content);
+			$content = preg_replace_callback($pattern, array($this, $tag['name'].'Handler'), $content);
 		}
 		return $content;
 	}
@@ -260,12 +269,13 @@ class Template
 			$left_delimiter = preg_quote($this->left_delimiter);
 			$right_delimiter = preg_quote($this->right_delimiter);
 			$pattern = '/'.$left_delimiter .$tag['name'].($tag['has_attr'] ? '\s+(.*?)' : '').'\/'.$right_delimiter .'/s';
-			$content = preg_replace_callback($pattern, array($this, 'trans_'.$tag['name']), $content);
+			$content = preg_replace_callback($pattern, array($this, $tag['name'].'Handler'), $content);
 		}
 		return $content;
 	}
 
-    public function parse($content) {
+    public function trans($content)
+	{
         $content = $this->parse_include($content);
         $content = $this->literalTrans($content);
         for($i = 0; $i < $this->depth; $i++) {
