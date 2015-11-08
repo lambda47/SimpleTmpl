@@ -7,20 +7,18 @@ class Template
     private $rand_id = '';
     private $template_dir = '';
     private $cache_dir = '';
-	private $tag_with_end = array(
-		array('name' => 'volist', 'has_attr' => true),
-		array('name' => 'foreach', 'has_attr' => true),
-		array('name' => 'for', 'has_attr' => true),
-		array('name' => 'if', 'has_attr' => true),
-		array('name' => 'switch', 'has_attr' => true),
-		array('name' => 'case', 'has_attr' => true)
+	private $tags = array(
+		array('name' => 'volist', 'has_attr' => true, 'with_end' => true),
+		array('name' => 'foreach', 'has_attr' => true, 'with_end' => true),
+		array('name' => 'for', 'has_attr' => true, 'with_end' => true),
+		array('name' => 'if', 'has_attr' => true, 'with_end' => true),
+		array('name' => 'switch', 'has_attr' => true, 'with_end' => true),
+		array('name' => 'case', 'has_attr' => true, 'with_end' => true),
+		array('name' => 'elseif', 'has_attr' => true, 'with_end' => false),
+		array('name' => 'else', 'has_attr' => false, 'with_end' => false),
+		array('name' => 'default', 'has_attr' => false, 'with_end' => false)
 	);
-	private $tag_without_end = array(
-		array('name' => 'elseif', 'has_attr' => true),
-		array('name' => 'else', 'has_attr' => false),
-		array('name' => 'default', 'has_attr' => false)
-	);
-
+	
     public function Template($config)
 	{
         $this->left_delimiter = empty($config['left_delimiter']) ? $this->liet_delimiter : $config['left_delimiter'];
@@ -252,24 +250,20 @@ class Template
         return preg_replace_callback($pattern, array($this, 'trans_include'), $content);
     }
 
-	private function tagWithEndTrans($content)
+	private function tagTrans($content)
 	{
-		foreach($this->tag_with_end as $tag) {
+		foreach($this->tags as $tag) {
 			$left_delimiter = preg_quote($this->left_delimiter);
 			$right_delimiter = preg_quote($this->right_delimiter);
-			$pattern = '/(?>'.$left_delimiter .$tag['name'].($tag['has_attr'] ? '\s+(.*?)' : '').$right_delimiter .')((?:.(?!'.$left_delimiter .$tag['name'].'.*?'.$right_delimiter .'))*?)'.$left_delimiter .'\/'.$tag['name'].$right_delimiter .'/s';
-			$content = preg_replace_callback($pattern, array($this, $tag['name'].'Handler'), $content);
-		}
-		return $content;
-	}
-
-	private function tagWithoutEndTrans($content)
-	{
-		foreach($this->tag_without_end as $tag) {
-			$left_delimiter = preg_quote($this->left_delimiter);
-			$right_delimiter = preg_quote($this->right_delimiter);
-			$pattern = '/'.$left_delimiter .$tag['name'].($tag['has_attr'] ? '\s+(.*?)' : '').'\/'.$right_delimiter .'/s';
-			$content = preg_replace_callback($pattern, array($this, $tag['name'].'Handler'), $content);
+		    if($tag['with_end']) {
+				$pattern = '/(?>'.$left_delimiter .$tag['name'].($tag['has_attr'] ? '\s+(.*?)' : '').$right_delimiter .')((?:.(?!'.$left_delimiter .$tag['name'].'.*?'.$right_delimiter .'))*?)'.$left_delimiter .'\/'.$tag['name'].$right_delimiter .'/s';
+				for($i = 0; $i < $this->depth; $i++) {
+					$content = preg_replace_callback($pattern, array($this, $tag['name'].'Handler'), $content);
+				}
+			} else {
+				$pattern = '/'.$left_delimiter .$tag['name'].($tag['has_attr'] ? '\s+(.*?)' : '').'\/'.$right_delimiter .'/s';
+				$content = preg_replace_callback($pattern, array($this, $tag['name'].'Handler'), $content);
+			}
 		}
 		return $content;
 	}
@@ -278,11 +272,7 @@ class Template
 	{
         $content = $this->parse_include($content);
         $content = $this->literalTrans($content);
-        for($i = 0; $i < $this->depth; $i++) {
-            $content = $this->tagWithEndTrans($content);
-        }
-        $content = $this->tagWithoutEndTrans($content);
-        $content = $this->varTrans($content);
+		$content = $this->tagTrans($content);
         $content = $this->phpTrans($content);
         $content = $this->literalTrans($content, 1);
         $content = $this->commentTrans($content);
