@@ -1,11 +1,10 @@
 <?php
-require('Template.php');
+require('SimpleTmpl.php');
 
-$template = new Template(array(
+$SimpleTmpl->setConfig(array(
     'left_delimiter' => '<!--{',
     'right_delimiter' => '}-->',
-    'template_dir' => 'view',
-    'cache_dir' => 'cache'
+    'template_dir' => './view/',
+    'cache_dir' => './cache/'
 ));
-$content = file_get_contents('test.phtml');
-highlight_string($template->trans($content));
+highlight_string($SimpleTmpl->display('test'));
