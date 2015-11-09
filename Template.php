@@ -12,7 +12,7 @@ class Template
     	'cache_dir' => './'
 	);
 
-	private function Template()
+	private function __construct()
 	{
 	}
 
