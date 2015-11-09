@@ -7,4 +7,4 @@ $SimpleTmpl->setConfig(array(
     'template_dir' => './view/',
     'cache_dir' => './cache/'
 ));
-highlight_string($SimpleTmpl->display('test'));
+highlight_string($SimpleTmpl->render('test'));
