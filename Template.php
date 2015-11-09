@@ -24,16 +24,19 @@ class Template
 		return self::$instance;
 	}
 
-	public function readFile($file) {
+	public function readFile($file)
+	{
 		$file_path = $this->config['template_dir'].$file.'.phtml';
 		return file_get_contents($file_path);
 	}
 
-	public function setConfig($config) {
+	public function setConfig($config)
+	{
 		$this->config = array_merge($this->config, $config);
 	}
 
-	public function display($file) {
+	public function display($file)
+	{
 		$content = $this->readFile($file);
 		$compile = new Compile(array(
 			'left_delimiter' => $this->config['left_delimiter'],

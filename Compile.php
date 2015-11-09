@@ -1,6 +1,9 @@
 <?php
 namespace SimpleTmpl;
 
+define('PARSE', 'SIMPLE_TMPL_PARSE');
+define('RESTORE', 'SIMPLE_TMPL_RESTORE');
+
 class Compile
 {
     private $left_delimiter  = '<!--{';
@@ -33,7 +36,7 @@ class Compile
         $srand_str = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         $srand_len = strlen($srand_str);
         $str = '';
-        for($i = 0; $i < $len; $i++) {
+        for ($i = 0; $i < $len; $i++) {
             $str .= $srand_str[rand(0, $srand_len - 1)];
         }
         return $str;
@@ -43,7 +46,7 @@ class Compile
 	{
         $attrs = array();
         preg_match_all('/[^\s=]*=".*?"/', $attrs_str, $matches);
-        foreach($matches[0] as $match) {
+        foreach ($matches[0] as $match) {
             list($attr, $val) = explode('=', $match, 2);
             $attrs[$attr] = trim($val, '"');
         }
@@ -61,7 +64,7 @@ class Compile
     private function volistHandler($matches)
 	{
         $attrs = $this->attrHandler($matches[1]);
-        if(!isset($attrs['id'])) {
+        if (!isset($attrs['id'])) {
             $attrs['id'] = 'item';
         }
         $name = $attrs['name'];
@@ -71,10 +74,10 @@ class Compile
             $str .= '[\''.$index_name.'\']';
             return $str;
         }, $first_part);
-        if(isset($attrs['offset']) || isset($attrs['length'])) {
+        if (isset($attrs['offset']) || isset($attrs['length'])) {
             $offset = isset($attrs['offset']) ? max(intval($attrs['offset']), 1) : 0;
             $length = isset($attrs['length']) ? intval($attrs['length']) : 0;
-            if($length === 0) {
+            if ($length === 0) {
                 $arr_exp = 'array_slice('.$arr_var_str.', '.$offset.', NULL, true)';
             } else {
                 $arr_exp = 'array_slice('.$arr_var_str.', '.$offset.', '.$length.', true)';
@@ -91,10 +94,10 @@ class Compile
     private function foreachHandler($matches)
 	{
         $attrs = $this->attrHandler($matches[1]);
-        if(!isset($attrs['key'])) {
+        if (!isset($attrs['key'])) {
             $attrs['key'] = 'key';
         }
-        if(!isset($attrs['item'])) {
+        if (!isset($attrs['item'])) {
             $attrs['item'] = 'item';
         }
         $name = $attrs['name'];
@@ -113,7 +116,7 @@ class Compile
     private function forHandler($matches)
 	{
         $attrs = $this->attrHandler($matches[1]);
-        if(!isset($attrs['name'])) {
+        if (!isset($attrs['name'])) {
             $attrs['name'] = 'i';
         }
         $step = isset($attrs['step']) ? max(intval($attrs['step']), 1) : 1;
@@ -165,7 +168,7 @@ class Compile
     private function caseHandler($matches)
 	{
         $attrs = $this->attrHandler($matches[1]);
-        if(!isset($attrs['break'])) {
+        if (!isset($attrs['break'])) {
             $break = 1;
         } else {
             $break = intval($attrs['break']) > 0 ? 1 : 0;
@@ -179,7 +182,7 @@ class Compile
             return $str.'<?php case '.$val.':?>';
         }, '');
         $result .= $matches[2];
-        if($break === 1) {
+        if ($break === 1) {
             $result .= '<?php break;?>';
         }
         return $result;
@@ -189,13 +192,6 @@ class Compile
 	{
         $result = '<?php default:?>';
         return $result;
-    }
-
-    private function trans_include($matches) {
-        $attrs = $this->attrHandler($matches[1]);
-        $file_name = $attrs['file'];
-        $include_tmp_content = call_user_func_array($this->read_file_handler, array($file_name));
-        return $this->trans($include_tmp_content);
     }
 
     private function phpTrans($content)
@@ -221,16 +217,16 @@ class Compile
 		}, $content);
     }
 
-    private function literalTrans($content, $flag = 0)
+    private function literalTrans($content, $flag = PARSE)
 	{
-        if($flag === 0) {
+        if ($flag === PARSE) {
             $this->rand_id = self::randStr(6);
         }
         $pattern = '/'.$this->left_delimiter .'literal'.$this->right_delimiter .'(.*?)'.$this->left_delimiter .'\/literal'.$this->right_delimiter .'/s';
         return preg_replace_callback($pattern, function($matches) use ($flag) {
             $source = array($this->left_delimiter , $this->right_delimiter , '{{', '}}');
             $destin = array('[@'.$this->rand_id, $this->rand_id.'@]', '{@'.$this->rand_id, $this->rand_id.'@}');
-            if($flag === 0) {
+            if ($flag === PARSE) {
                 return $this->left_delimiter .'literal'.$this->right_delimiter .str_replace($source, $destin, $matches[1]).$this->left_delimiter .'/literal'.$this->right_delimiter ;
             } else {
                 return str_replace($destin, $source, $matches[1]);
@@ -245,19 +241,25 @@ class Compile
         return $content;
     }
 
-    private function parse_include($content) {
+    private function includeExpanse($content)
+	{
         $pattern = '/'.$this->left_delimiter .'include\s+(.*?)\/'.$this->right_delimiter .'/s';
-        return preg_replace_callback($pattern, array($this, 'trans_include'), $content);
+        return preg_replace_callback($pattern, function($matches) {
+			$attrs = $this->attrHandler($matches[1]);
+			$file_name = $attrs['file'];
+			$include_tmp_content = call_user_func_array($this->read_file_handler, array($file_name));
+			return $this->trans($include_tmp_content);
+		}, $content);
     }
 
 	private function tagTrans($content)
 	{
-		foreach($this->tags as $tag) {
+		foreach ($this->tags as $tag) {
 			$left_delimiter = preg_quote($this->left_delimiter);
 			$right_delimiter = preg_quote($this->right_delimiter);
-		    if($tag['with_end']) {
+		    if ($tag['with_end']) {
 				$pattern = '/(?>'.$left_delimiter .$tag['name'].($tag['has_attr'] ? '\s+(.*?)' : '').$right_delimiter .')((?:.(?!'.$left_delimiter .$tag['name'].'.*?'.$right_delimiter .'))*?)'.$left_delimiter .'\/'.$tag['name'].$right_delimiter .'/s';
-				for($i = 0; $i < $this->depth; $i++) {
+				for ($i = 0; $i < $this->depth; $i++) {
 					$content = preg_replace_callback($pattern, array($this, $tag['name'].'Handler'), $content);
 				}
 			} else {
@@ -270,11 +272,12 @@ class Compile
 
     public function trans($content)
 	{
-        $content = $this->parse_include($content);
-        $content = $this->literalTrans($content);
+        $content = $this->includeExpanse($content);
+        $content = $this->literalTrans($content, PARSE);
 		$content = $this->tagTrans($content);
+		$content = $this->varTrans($content);
         $content = $this->phpTrans($content);
-        $content = $this->literalTrans($content, 1);
+        $content = $this->literalTrans($content, RESTORE);
         $content = $this->commentTrans($content);
         return $content;
     }
