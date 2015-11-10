@@ -56,7 +56,7 @@ class Compile
     private function expTrans($matches)
     {
         $keys_arr = explode('.', substr($matches[2], 1));
-        return $matches[1].array_reduce($keys_arr, function($str, $item){
+        return $matches[1].array_reduce($keys_arr, function ($str, $item){
             return $str.'[\''.$item.'\']';
         }, '');
     }
@@ -70,7 +70,7 @@ class Compile
         $name = $attrs['name'];
         $name_part_arr = explode('.', $name);
         $first_part = '$'.array_shift($name_part_arr);
-        $arr_var_str = array_reduce($name_part_arr, function($str, $index_name) {
+        $arr_var_str = array_reduce($name_part_arr, function ($str, $index_name) {
             $str .= '[\''.$index_name.'\']';
             return $str;
         }, $first_part);
@@ -103,7 +103,7 @@ class Compile
         $name = $attrs['name'];
         $name_part_arr = explode('.', $name);
         $first_part = '$'.array_shift($name_part_arr);
-        $arr_var_str = array_reduce($name_part_arr, function($str, $index_name) {
+        $arr_var_str = array_reduce($name_part_arr, function ($str, $index_name) {
             $str .= '[\''.$index_name.'\']';
             return $str;
         }, $first_part);
@@ -155,7 +155,7 @@ class Compile
         $name = $attrs['name'];
         $name_part_arr = explode('.', $name);
         $first_part = '$'.array_shift($name_part_arr);
-        $arr_var_str = array_reduce($name_part_arr, function($str, $index_name) {
+        $arr_var_str = array_reduce($name_part_arr, function ($str, $index_name) {
             $str .= '[\''.$index_name.'\']';
             return $str;
         }, $first_part);
@@ -178,7 +178,7 @@ class Compile
         $val_arr = array_map(function($item) {
             return $item[0] === '$' ? preg_replace_callback('/(\$[^\.]+)((?:\.\w+)+)/', array($this, 'expTrans'), $item) : $item;
         }, $val_arr);
-        $result = array_reduce($val_arr, function($str, $val) {
+        $result = array_reduce($val_arr, function ($str, $val) {
             return $str.'<?php case '.$val.':?>';
         }, '');
         $result .= $matches[2];
@@ -199,7 +199,7 @@ class Compile
         $left_delimiter = preg_quote($this->left_delimiter);
         $right_delimiter = preg_quote($this->right_delimiter);
         $pattern = '/'.$left_delimiter .'php'.$right_delimiter .'(.*?)'.$left_delimiter .'\/php'.$right_delimiter .'/s';
-        return preg_replace_callback($pattern, function($matches) {
+        return preg_replace_callback($pattern, function ($matches) {
             $result = '<?php ';
             $result .= $matches[1];
             $result .= ' ?>';
@@ -210,7 +210,7 @@ class Compile
     private function varTrans($content)
     {
         $pattern = '/{{(.*?)}}/';
-        return preg_replace_callback($pattern, function($matches) {
+        return preg_replace_callback($pattern, function ($matches) {
             $var = preg_replace_callback('/(\$[^\.]+)((?:\.\w+)+)/', array($this, 'expTrans'), $matches[1]);
             $result = '<?php echo '.$var.';?>';
             return $result;
@@ -223,7 +223,7 @@ class Compile
             $this->rand_id = self::randStr(6);
         }
         $pattern = '/'.$this->left_delimiter .'literal'.$this->right_delimiter .'(.*?)'.$this->left_delimiter .'\/literal'.$this->right_delimiter .'/s';
-        return preg_replace_callback($pattern, function($matches) use ($flag) {
+        return preg_replace_callback($pattern, function ($matches) use ($flag) {
             $source = array($this->left_delimiter , $this->right_delimiter , '{{', '}}');
             $destin = array('[@'.$this->rand_id, $this->rand_id.'@]', '{@'.$this->rand_id, $this->rand_id.'@}');
             if ($flag === PARSE) {
@@ -244,7 +244,7 @@ class Compile
     private function includeExpanse($content)
     {
         $pattern = '/'.$this->left_delimiter .'include\s+(.*?)\/'.$this->right_delimiter .'/s';
-        return preg_replace_callback($pattern, function($matches) {
+        return preg_replace_callback($pattern, function ($matches) {
             $attrs = $this->attrHandler($matches[1]);
             $file_name = $attrs['file'];
             $include_tmp_content = call_user_func_array($this->read_file_handler, array($file_name));
@@ -282,3 +282,4 @@ class Compile
         return $content;
     }
 }
+

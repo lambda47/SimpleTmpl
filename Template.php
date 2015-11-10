@@ -18,7 +18,7 @@ class Template
 
     }
 
-    static public function getInstance()
+    public static function getInstance()
     {
         if(is_null(self::$instance)) {
             self::$instance = new Template();
