@@ -6,4 +6,3 @@ use SimpleTmpl\Template;
 use SimpleTmpl\Compile;
 
 $SimpleTmpl = Template::getInstance();
-

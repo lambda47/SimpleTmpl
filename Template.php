@@ -20,7 +20,7 @@ class Template
 
     public static function getInstance()
     {
-        if(is_null(self::$instance)) {
+        if (is_null(self::$instance)) {
             self::$instance = new Template();
         }
         return self::$instance;
@@ -68,4 +68,3 @@ class Template
         echo $this->render($file);
     }
 }
-

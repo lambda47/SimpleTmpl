@@ -26,7 +26,8 @@ class Compile
     public function __construct($config)
     {
         $this->left_delimiter = empty($config['left_delimiter']) ? $this->liet_delimiter : $config['left_delimiter'];
-        $this->right_delimiter = empty($config['right_delimiter']) ? $this->right_delimiter : $config['right_delimiter'];
+        $this->right_delimiter = empty($config['right_delimiter']) ? $this->right_delimiter
+            : $config['right_delimiter'];
         $this->depth = empty($config['depth']) ? $this->depth : $config['depth'];
         $this->read_file_handler = $config['read_file_handler'];
     }
@@ -56,7 +57,7 @@ class Compile
     private function expTrans($matches)
     {
         $keys_arr = explode('.', substr($matches[2], 1));
-        return $matches[1].array_reduce($keys_arr, function ($str, $item){
+        return $matches[1].array_reduce($keys_arr, function ($str, $item) {
             return $str.'[\''.$item.'\']';
         }, '');
     }
@@ -120,7 +121,8 @@ class Compile
             $attrs['name'] = 'i';
         }
         $step = isset($attrs['step']) ? max(intval($attrs['step']), 1) : 1;
-        $result = '<?php for($'.$attrs['name'].' = '.$attrs['start'].'; $'.$attrs['name'].' < '.$attrs['end'].'; $'.$attrs['name'].' += '.$step.'):?>';
+        $result = '<?php for($'.$attrs['name'].' = '.$attrs['start'].'; $'.$attrs['name'].
+            ' < '.$attrs['end'].'; $'.$attrs['name'].' += '.$step.'):?>';
         $result .= $matches[2];
         $result .= '<?php endfor;?>';
         return $result;
@@ -150,7 +152,8 @@ class Compile
         return $result;
     }
 
-    private function switchHandler($matches) {
+    private function switchHandler($matches)
+    {
         $attrs = $this->attrHandler($matches[1]);
         $name = $attrs['name'];
         $name_part_arr = explode('.', $name);
@@ -175,8 +178,12 @@ class Compile
         }
         $val = $attrs['value'];
         $val_arr = explode('|', $val);
-        $val_arr = array_map(function($item) {
-            return $item[0] === '$' ? preg_replace_callback('/(\$[^\.]+)((?:\.\w+)+)/', array($this, 'expTrans'), $item) : $item;
+        $val_arr = array_map(function ($item) {
+            return $item[0] === '$' ? preg_replace_callback(
+                '/(\$[^\.]+)((?:\.\w+)+)/',
+                array($this, 'expTrans'),
+                $item
+            ) : $item;
         }, $val_arr);
         $result = array_reduce($val_arr, function ($str, $val) {
             return $str.'<?php case '.$val.':?>';
@@ -222,12 +229,15 @@ class Compile
         if ($flag === PARSE) {
             $this->rand_id = self::randStr(6);
         }
-        $pattern = '/'.$this->left_delimiter .'literal'.$this->right_delimiter .'(.*?)'.$this->left_delimiter .'\/literal'.$this->right_delimiter .'/s';
+        $pattern = '/'.$this->left_delimiter .'literal'.$this->right_delimiter .'(.*?)'.
+            $this->left_delimiter .'\/literal'.$this->right_delimiter .'/s';
         return preg_replace_callback($pattern, function ($matches) use ($flag) {
             $source = array($this->left_delimiter , $this->right_delimiter , '{{', '}}');
             $destin = array('[@'.$this->rand_id, $this->rand_id.'@]', '{@'.$this->rand_id, $this->rand_id.'@}');
             if ($flag === PARSE) {
-                return $this->left_delimiter .'literal'.$this->right_delimiter .str_replace($source, $destin, $matches[1]).$this->left_delimiter .'/literal'.$this->right_delimiter ;
+                return $this->left_delimiter .'literal'.$this->right_delimiter .
+                    str_replace($source, $destin, $matches[1]).
+                    $this->left_delimiter .'/literal'.$this->right_delimiter ;
             } else {
                 return str_replace($destin, $source, $matches[1]);
             }
@@ -258,12 +268,15 @@ class Compile
             $left_delimiter = preg_quote($this->left_delimiter);
             $right_delimiter = preg_quote($this->right_delimiter);
             if ($tag['with_end']) {
-                $pattern = '/(?>'.$left_delimiter .$tag['name'].($tag['has_attr'] ? '\s+(.*?)' : '').$right_delimiter .')((?:.(?!'.$left_delimiter .$tag['name'].'.*?'.$right_delimiter .'))*?)'.$left_delimiter .'\/'.$tag['name'].$right_delimiter .'/s';
+                $pattern = '/(?>'.$left_delimiter .$tag['name'].($tag['has_attr'] ? '\s+(.*?)' : '').
+                    $right_delimiter .')((?:.(?!'.$left_delimiter .$tag['name'].'.*?'.$right_delimiter .'))*?)'.
+                    $left_delimiter .'\/'.$tag['name'].$right_delimiter .'/s';
                 for ($i = 0; $i < $this->depth; $i++) {
                     $content = preg_replace_callback($pattern, array($this, $tag['name'].'Handler'), $content);
                 }
             } else {
-                $pattern = '/'.$left_delimiter .$tag['name'].($tag['has_attr'] ? '\s+(.*?)' : '').'\/'.$right_delimiter .'/s';
+                $pattern = '/'.$left_delimiter .$tag['name'].($tag['has_attr'] ? '\s+(.*?)' : '').'\/'.
+                    $right_delimiter .'/s';
                 $content = preg_replace_callback($pattern, array($this, $tag['name'].'Handler'), $content);
             }
         }
@@ -282,4 +295,3 @@ class Compile
         return $content;
     }
 }
-

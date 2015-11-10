@@ -8,4 +8,3 @@ $SimpleTmpl->setConfig(array(
     'cache_dir' => './cache/'
 ));
 highlight_string($SimpleTmpl->render('test'));
-
